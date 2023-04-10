@@ -21,6 +21,8 @@ Route::group(['middleware'=>['api']],function(){
     Route::get('/verify', [App\Http\Controllers\UserController::class, 'confirmAccount'])->name('users.confirmAccount');
     Route::post('/forget', [App\Http\Controllers\UserController::class, 'forget'])->name('users.forget');
     Route::post('/resetPassword', [App\Http\Controllers\UserController::class, 'resetPassword'])->name('users.resetPassword');
+    Route::get('/auth/google',[App\Http\Controllers\UserController::class, 'googleAuthRedirect'])->name('users.googleAuthRedirect');
+    Route::get('/auth/googleCallback', [App\Http\Controllers\UserController::class, 'googleAuthCallback'])->name('users.googleAuthCallback');
 });
 
 Route::middleware(['auth:sanctum'])->group(function () {

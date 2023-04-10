@@ -14,6 +14,7 @@ use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use App\Services\UserService;
+use Laravel\Socialite\Facades\Socialite;
 
 class UserController extends Controller
 {
@@ -75,6 +76,19 @@ class UserController extends Controller
     public function resetPassword(Request $request){
         $msg = $this->userService->resetPassword($request->token,$request->newPassword,$request->confirmPassword);
         return response(['message'=>$msg],200);
+    }
+
+    public function googleAuthRedirect(){
+        return response()->json([
+            'url' => Socialite::driver('google')
+                ->stateless()
+                ->redirect()
+                ->getTargetUrl(),
+        ]);
+    }
+    public function googleAuthCallback(){
+        $socialiteUser = Socialite::driver('google')->stateless()->user();
+        return $this->userService->loginUsingGooleUser($socialiteUser);
     }
 
 

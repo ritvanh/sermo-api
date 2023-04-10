@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Exceptions\MissingAbilityException;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Spatie\Ignition\Tests\TestClasses\Models\Car;
 
 class UserService {
     public function getUser($id) {
@@ -135,5 +136,29 @@ class UserService {
         });
 
         return "password reset succesfully";
+    }
+
+    public function loginUsingGooleUser($googleUser){
+        $user = User::with('roles')->where('email',$googleUser->getEmail())->first();
+        if(!$user){
+            DB::transaction(function () use ($googleUser) {
+                $user = User::create([
+                    'name' => $googleUser->getName(),
+                    'profilePhotoPath' => $googleUser->getAvatar(),
+                    'email' => $googleUser->getEmail(),
+                    'password' => '',
+                    'email_verification_token' => ''
+                ]);
+
+                $user->email_verified_at = Carbon::now();
+                $user->save();
+                $user->roles()->attach(Role::where('name', 'user')->first());
+            });
+
+            $createdUser = User::where('email', $googleUser->getEmail())->first();
+            $roles = $createdUser->roles()->pluck('name')->toArray();
+            return $user->createToken('token',$roles)->plainTextToken;
+        }
+
     }
 }
