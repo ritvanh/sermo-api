@@ -34,6 +34,14 @@ class UserService {
         return $user->createToken('token',$roles)->plainTextToken;
     }
 
+    public function  loginOAuth($email){
+        $user = User::where('email', $email)->first();
+        $user->tokens()->delete();
+        $roles = $user->roles->pluck('name')->toArray();
+
+        return $user->createToken('token',$roles)->plainTextToken;
+    }
+
     public function getAll(){
         return User::all();
     }
@@ -139,13 +147,16 @@ class UserService {
     }
 
     public function loginUsingGooleUser($googleUser){
-        $user = User::with('roles')->where('email',$googleUser->getEmail())->first();
+        $email = $googleUser->getEmail();
+        $profilePic = $googleUser->getAvatar();
+        $name = $googleUser->getName();
+        $user = User::with('roles')->where('email',$email)->first();
         if(!$user){
-            DB::transaction(function () use ($googleUser) {
+            DB::transaction(function () use ($name,$profilePic,$email) {
                 $user = User::create([
-                    'name' => $googleUser->getName(),
-                    'profilePhotoPath' => $googleUser->getAvatar(),
-                    'email' => $googleUser->getEmail(),
+                    'name' => $name,
+                    'profilePhotoPath' => $profilePic,
+                    'email' => $email,
                     'password' => '',
                     'email_verification_token' => ''
                 ]);
@@ -155,9 +166,8 @@ class UserService {
                 $user->roles()->attach(Role::where('name', 'user')->first());
             });
 
-            $createdUser = User::where('email', $googleUser->getEmail())->first();
-            $roles = $createdUser->roles()->pluck('name')->toArray();
-            return $user->createToken('token',$roles)->plainTextToken;
+            $token = $this->loginOAuth($email);
+            return $token;
         }
 
     }
