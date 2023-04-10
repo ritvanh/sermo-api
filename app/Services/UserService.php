@@ -28,9 +28,9 @@ class UserService {
         }
         $user->tokens()->delete();
 
-        //$roles = $user->roles->pluck('name');
+        $roles = $user->roles->pluck('name')->toArray();
 
-        return $user->createToken('token')->plainTextToken;
+        return $user->createToken('token',$roles)->plainTextToken;
     }
 
     public function getAll(){
@@ -65,7 +65,7 @@ class UserService {
             'email_verification_token' => Str::random(20),
         ]);
 
-        //$user->roles->attach(Role::where('name', 'user')->first());
+        $user->roles->attach(Role::where('name', 'user')->first());
 
         Mail::to($user->email)->send(new RegistrationGreetingMail($user->name,$user->email_verification_token));
 

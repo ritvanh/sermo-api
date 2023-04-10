@@ -31,5 +31,5 @@ Route::get('/chats',function(){
 });
 
 Route::group(['middleware'=>['auth:sanctum']],function(){
-
+    Route::get('/users',[App\Http\Controllers\UserController::class, 'index'])->name('users.index');
 });
