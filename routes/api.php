@@ -23,4 +23,8 @@ Route::group(['middleware'=>['api']],function(){
     Route::post('/resetPassword', [App\Http\Controllers\UserController::class, 'resetPassword'])->name('users.resetPassword');
 });
 
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('me', [AuthController::class, 'me']);
+});
+
 

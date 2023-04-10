@@ -14,7 +14,6 @@ use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use App\Services\UserService;
-use App\DTO\CreateUserDto;
 
 class UserController extends Controller
 {
@@ -57,15 +56,15 @@ class UserController extends Controller
     public function update(Request $request) {
 
         $loggedInUser = $request->user();
-        if ($loggedInUser->id == $user->id) {
-            $user->update();
+        if ($loggedInUser->id == $loggedInUser->id) {
+            $loggedInUser->update();
         } elseif ($loggedInUser->tokenCan('admin')) {
-            $user->update();
+            $loggedInUser->update();
         } else {
             throw new MissingAbilityException('Not Authorized');
         }
 
-        return $user;
+        return $loggedInUser;
     }
 
     public function forget(Request $request){

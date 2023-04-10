@@ -13,7 +13,7 @@
     <p>E/I dashur {{ $name }},</p>
     <p>Faleminderit qe jeni bere pjese e jona! Per te vazhduar me tej duhet te konfirmoni email tuaj!</p>
     <div>
-        <a href="http://localhost:3000/user/registerConfirm?token={{ $token }}" class="btn btn-primary"
+        <a href="http://localhost:3000/user/register_confirm?token={{ $token }}" class="btn btn-primary"
             data-style="zoom-in"><span class="ladda-label">Konfirmo</span></a>
     </div>
     <span>nese nuk ishit ju, thjesht injoroni kete email

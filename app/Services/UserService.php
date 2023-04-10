@@ -65,7 +65,7 @@ class UserService {
             'email_verification_token' => Str::random(20),
         ]);
 
-        $user->roles->attach(Role::where('name', 'user')->first());
+        $user->roles()->attach(Role::where('name', 'user')->first());
 
         Mail::to($user->email)->send(new RegistrationGreetingMail($user->name,$user->email_verification_token));
 
