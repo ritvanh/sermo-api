@@ -13,7 +13,7 @@
     <p>E/I dashur {{ $name }},</p>
     <p>Ju keni bere nje kerkese per rikthim fjalekalimi</p>
     <div>
-        <a href="http://127.0.0.1:8000/api/confirmEmail?token={{ $token }}" class="btn btn-primary"
+        <a href="http://localhost:3000/user/reset?token={{ $token }}" class="btn btn-primary"
             data-style="zoom-in"><span class="ladda-label">Rikthe</span></a>
     </div>
     <span>nese nuk ishit ju, thjesht injoroni kete email
