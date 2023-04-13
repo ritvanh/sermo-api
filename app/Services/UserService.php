@@ -27,6 +27,9 @@ class UserService {
         if (! $user || ! Hash::check($password, $user->password)) {
             throw new GenericJsonException("Wrong credentials",401);
         }
+        if($user->email_verified_at == null){
+            throw new GenericJsonException("Please confirm your email",401);
+        }
         $user->tokens()->delete();
 
         $roles = $user->roles->pluck('name')->toArray();
@@ -139,6 +142,9 @@ class UserService {
         DB::transaction(function () use($userFromDb,$tokenFromDb,$newPassword) {
             $userFromDb->tokens()->delete();
             $userFromDb->password = Hash::make($newPassword);
+            if($userFromDb->email_verified_at == null){
+                $userFromDb->email_verified_at = Carbon::now();
+            }
             $userFromDb->save();
             $tokenFromDb->delete();
         });
@@ -147,9 +153,9 @@ class UserService {
     }
 
     public function loginUsingGooleUser($googleUser){
-        $email = $googleUser->getEmail();
-        $profilePic = $googleUser->getAvatar();
-        $name = $googleUser->getName();
+        $email = $googleUser['email'];
+        $profilePic = $googleUser['picture'];
+        $name = $googleUser['name'];
         $user = User::with('roles')->where('email',$email)->first();
         if(!$user){
             DB::transaction(function () use ($name,$profilePic,$email) {
@@ -165,10 +171,8 @@ class UserService {
                 $user->save();
                 $user->roles()->attach(Role::where('name', 'user')->first());
             });
-
-            $token = $this->loginOAuth($email);
-            return $token;
         }
-
+        $token = $this->loginOAuth($email);
+        return $token;
     }
 }

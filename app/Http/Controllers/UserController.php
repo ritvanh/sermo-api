@@ -2,19 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Role;
-use App\Models\User;
-use App\Models\PasswordResetToken;
-use App\Mail\RegistrationGreetingMail;
-use Illuminate\Support\Facades\Mail;
+use App\Exceptions\GenericJsonException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Exceptions\MissingAbilityException;
-use Illuminate\Routing\Controller as BaseController;
-use Illuminate\Support\Str;
-use Carbon\Carbon;
 use App\Services\UserService;
 use Laravel\Socialite\Facades\Socialite;
+use Google_Client;
 
 class UserController extends Controller
 {
@@ -86,9 +79,19 @@ class UserController extends Controller
                 ->getTargetUrl(),
         ]);
     }
-    public function googleAuthCallback(){
-        $socialiteUser = Socialite::driver('google')->stateless()->user();
-        return $this->userService->loginUsingGooleUser($socialiteUser);
+    public function googleAuthCallback(Request $request){
+        $token = $request->query('token');
+        if(!$token){
+            throw new GenericJsonException("Token is missing",400);
+        }
+        $client = new Google_Client(['client_id' => env('GOOGLE_CLIENT_ID')]);
+        $payload = $client->verifyIdToken($token);
+        if ($payload) {
+            $token = $this->userService->loginUsingGooleUser($payload);
+            return response(['token' => $token], 200);
+        } else {
+            throw new GenericJsonException("Invalid token",401);
+        }
     }
 
 
