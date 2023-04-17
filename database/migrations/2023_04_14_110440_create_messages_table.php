@@ -17,12 +17,11 @@ return new class extends Migration
             $table->foreign('sender_id')->references('id')->on('users')->onDelete('cascade');
             $table->unsignedBigInteger('receiver_id');
             $table->foreign('receiver_id')->references('id')->on('users')->onDelete('cascade');
-            $table->unsignedBigInteger('conversation_id');
-            $table->foreign('conversation_id')->references('id')->on('conversations')->onDelete('cascade');
             $table->unsignedBigInteger('reply_to_id');
             $table->foreign('reply_to_id')->references('id')->on('messages')->onDelete('cascade');
-            $table->string('message_content');
+            $table->string('message_content')->nullable();
             $table->timestamp('sent_on');
+            $table->timestamp('seen_on')->nullable();
             $table->string('status');
         });
     }

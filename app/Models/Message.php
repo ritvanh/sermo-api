@@ -12,7 +12,6 @@ class Message extends Model
     use HasFactory, HasRelationships;
 
     protected $fillable = [
-      'conversation_id',
       'sender_id',
         'receiver_id',
         'reply_to_id',
@@ -20,12 +19,10 @@ class Message extends Model
     ];
     protected $casts = [
       'status' => MessageStatusEnum::class,
-      'sent_on' => 'datetime'
+      'sent_on' => 'datetime',
+        'seen_on' => 'datetime'
     ];
 
-    public function conversation(){
-        return $this->belongsTo(Conversation::class);
-    }
     public  function reply(){
         return $this->belongsTo(Message::class);
     }
