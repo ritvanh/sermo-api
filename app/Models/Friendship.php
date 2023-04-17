@@ -12,13 +12,14 @@ class Friendship extends Model
     use HasFactory,HasRelationships;
 
     protected $fillable = [
-      'requested_by',
-      'requested_to',
-      'destroyed_by',
-      'requested_on',
-      'destroyed_on'
+      'by_user',
+      'to_user'
     ];
     protected $casts = [
-      'status' => FriendshipStatusEnum::class
+      'status' => FriendshipStatusEnum::class,
+        'created_on' => 'datetime'
     ];
+    public function byUser(){
+        return $this->hasOne(User::class);
+    }
 }
