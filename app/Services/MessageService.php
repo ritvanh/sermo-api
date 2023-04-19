@@ -6,7 +6,7 @@ use App\Models\Message;
 use Carbon\Carbon;
 
 class MessageService{
-    protected $friendshipService;
+    protected FriendshipService $friendshipService;
     public function __construct(FriendshipService $service)
     {
         $this->friendshipService = $service;

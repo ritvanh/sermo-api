@@ -238,6 +238,15 @@ class FriendshipService{
             ->where([
                 ['by_user',$myId],
                 ['status',FriendshipStatusEnum::Blocked]
-            ])->get(['to_user.id','to_user.name','to_user.profilePhotoPath']);
+            ])
+            ->select(['to_user.id as id','to_user.name as name','to_user.profilePhotoPath as avatar'])
+            ->get();
+    }
+    public function getFriendRequests($myId){
+        return Friendship::where([
+            ['to_user',$myId],
+            ['status',FriendshipStatusEnum::Pending]
+        ])->select(['by_user.id as id','by_user.name as name','by_user.profilePhotoPath as avatar'])
+            ->get();
     }
 }
