@@ -11,7 +11,7 @@ use Google_Client;
 
 class UserController extends Controller
 {
-    protected $userService;
+    protected UserService $userService;
 
     public function __construct(UserService $userService)
     {
@@ -35,7 +35,8 @@ class UserController extends Controller
             'name' => 'nullable|string',
         ]);
 
-        return $this->userService->register($request);
+        $this->userService->register($request);
+        return response(['message'=> 'registration successful'],201);
     }
 
     public function confirmAccount(Request $request){
@@ -44,7 +45,7 @@ class UserController extends Controller
     }
 
     public function me(Request $request) {
-        return $request->user();
+        return auth()->id();
     }
 
     public function update(Request $request) {

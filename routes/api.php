@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::group(['middleware'=>['api']],function(){
-    Route::get('/me', [App\Http\Controllers\UserController::class, 'me'])->name('users.me');
+
     Route::post('/login', [App\Http\Controllers\UserController::class, 'login'])->name('users.login');
     Route::post('/register', [App\Http\Controllers\UserController::class, 'store'])->name('users.store');
     Route::get('/verify', [App\Http\Controllers\UserController::class, 'confirmAccount'])->name('users.confirmAccount');
@@ -26,7 +26,8 @@ Route::group(['middleware'=>['api']],function(){
 });
 
 Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('me', [AuthController::class, 'me']);
+    Route::get('/me', [App\Http\Controllers\UserController::class, 'me'])->name('users.me');
+    Route::get('/user', [App\Http\Controllers\UserProfileController::class, 'getProfile'])->name('users.getProfile');
 });
 
 

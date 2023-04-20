@@ -29,25 +29,27 @@ class UserProfileService{
 
     public function getProfileByUserId($myId,$userId){
         $friendship = $this->friendshipService->getFriendship($myId,$userId);
-        $relationship = '';
         if(!$friendship){
             $relationship = FriendshipStatusEnum::None;
-        }
-        switch ($friendship->status){
-            case(FriendshipStatusEnum::Blocked):
-                throw new GenericJsonException('User could not be found',404);
-                break;
-            case(FriendshipStatusEnum::Active):
-                $relationship = FriendshipStatusEnum::Active;
-                break;
-            case(FriendshipStatusEnum::Pending):
-                $relationship = FriendshipStatusEnum::Pending;
-                break;
-            default:
-                throw new GenericJsonException('Could not define relationship',500);
-                break;
+        }else {
+            switch ($friendship->status) {
+                case(FriendshipStatusEnum::Blocked):
+                    throw new GenericJsonException('User could not be found', 404);
+                case(FriendshipStatusEnum::Active):
+                    $relationship = FriendshipStatusEnum::Active;
+                    break;
+                case(FriendshipStatusEnum::Pending):
+                    $relationship = FriendshipStatusEnum::Pending;
+                    break;
+                default:
+                    throw new GenericJsonException('Could not define relationship', 500);
+            }
         }
         $user = User::where('id',$userId)->first();
+        if(!$user){
+            throw new GenericJsonException("User not found",404);
+        }
+       // $this->addProfileView($myId,$userId);
         return [
           'name' => $user->name,
             'id' => $user->id,
