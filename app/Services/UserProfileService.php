@@ -6,7 +6,6 @@ use App\Exceptions\GenericJsonException;
 use App\Models\ProfileView;
 use App\Models\User;
 use Carbon\Carbon;
-use PhpParser\Node\Scalar\String_;
 
 class UserProfileService{
     protected FriendshipService $friendshipService;
@@ -16,9 +15,9 @@ class UserProfileService{
     }
     public function addProfileView($viewerId,$viewedId){
         return ProfileView::create([
-            'visitor_id' => $viewedId,
+            'visitor_id' => $viewerId,
             'visited_id' => $viewedId,
-            'visited_at' => Carbon::now()
+            'visited_at' => now()
         ]);
     }
     public function getProfileViewsByUserId($userId){
@@ -49,7 +48,7 @@ class UserProfileService{
         if(!$user){
             throw new GenericJsonException("User not found",404);
         }
-       // $this->addProfileView($myId,$userId);
+       $this->addProfileView($myId,$userId);
         return [
           'name' => $user->name,
             'id' => $user->id,

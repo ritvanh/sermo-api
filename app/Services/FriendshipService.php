@@ -51,8 +51,6 @@ class FriendshipService{
                     throw new GenericJsonException("Couldn't find user",404);
                 case(FriendshipStatusEnum::Pending):
                     throw new GenericJsonException("This friendship is pending",400);
-                default:
-                    throw new GenericJsonException("Couldn't identify relationship status",400);
             }
         }
         $friendship = Friendship::create([
@@ -66,7 +64,7 @@ class FriendshipService{
     public function  cancelFriendRequest($myId, $friendId){
         $exisitngRelation = $this->getFriendship($myId,$friendId);
         if(!$exisitngRelation){
-            throw new GenericJsonException("Couldn't find a relationship with this user",404);
+            throw new GenericJsonException("Couldn't find a relationship",404);
         }
         switch ($exisitngRelation->status){
             case(FriendshipStatusEnum::Blocked):
@@ -82,12 +80,13 @@ class FriendshipService{
             default:
                 throw new GenericJsonException("Couldn't identify relationship status",400);
         }
+        return true;
     }
 
     public function acceptFriendRequest($myId, $friendId){
         $exisitngRelation = $this->getFriendship($myId,$friendId);
         if(!$exisitngRelation){
-            throw new GenericJsonException("Couldn't find a relationship with this user",404);
+            throw new GenericJsonException("Couldn't find a relationship",404);
         }
         switch ($exisitngRelation->status){
             case(FriendshipStatusEnum::Blocked):
@@ -104,11 +103,12 @@ class FriendshipService{
             default:
                 throw new GenericJsonException("Couldn't identify relationship status",400);
         }
+        return true;
     }
     public function refuseFriendRequest($myId, $friendId){
         $exisitngRelation = $this->getFriendship($myId,$friendId);
         if(!$exisitngRelation){
-            throw new GenericJsonException("Couldn't find a relationship with this user",404);
+            throw new GenericJsonException("Couldn't find a relationship",404);
         }
         switch ($exisitngRelation->status){
             case(FriendshipStatusEnum::Blocked):
@@ -124,6 +124,7 @@ class FriendshipService{
             default:
                 throw new GenericJsonException("Couldn't identify relationship status",400);
         }
+        return true;
     }
     public function endFriendship($myId,$friendId){
         $exisitngRelation = $this->getFriendship($myId,$friendId);
@@ -141,6 +142,7 @@ class FriendshipService{
             default:
                 throw new GenericJsonException("Couldn't identify relationship status",400);
         }
+        return true;
     }
 
     public function blockUser($myId,$friendId){
@@ -179,26 +181,27 @@ class FriendshipService{
         return true;
     }
     public function interactWithUserFriendship($myId,$friendId,$interactionType){
+        $val = FriendshipActionEnum::cases();
         switch ($interactionType){
-            case(FriendshipActionEnum::Send):
+            case FriendshipActionEnum::Send->value:
                 $this->sendFriendRequest($myId,$friendId);
                 break;
-            case(FriendshipActionEnum::Cancel):
+            case FriendshipActionEnum::Cancel->value:
                 $this->cancelFriendRequest($myId,$friendId);
                 break;
-            case(FriendshipActionEnum::Accept):
+            case FriendshipActionEnum::Accept->value:
                 $this->acceptFriendRequest($myId,$friendId);
                 break;
-            case(FriendshipActionEnum::Refuse):
-                break;
+            case FriendshipActionEnum::Refuse->value:
                 $this->refuseFriendRequest($myId,$friendId);
-            case(FriendshipActionEnum::Unfriend):
+                break;
+            case FriendshipActionEnum::Unfriend->value:
                 $this->endFriendship($myId,$friendId);
                 break;
-            case(FriendshipActionEnum::Block):
+            case FriendshipActionEnum::Block->value:
                 $this->blockUser($myId,$friendId);
                 break;
-            case(FriendshipActionEnum::Unblock):
+            case FriendshipActionEnum::Unblock->value:
                 $this->unblockUser($myId,$friendId);
                 break;
             default:
@@ -206,27 +209,31 @@ class FriendshipService{
         }
     }
     public function getFriendsByUserId($myId){
-        $friendships = Friendship::with(['by_user','to_user'])->where([
+        $friendships = Friendship::where([
             ['by_user',$myId],
             ['status',FriendshipStatusEnum::Active]
         ])->orWhere([
             ['to_user',$myId],
             ['status',FriendshipStatusEnum::Active]
-        ])->get();
+        ])->join('users as by_user','by_user.id','=','friendships.by_user')
+            ->join('users as to_user','to_user.id','=','friendships.to_user')
+            ->select('by_user.id as by_user_id','by_user.name as by_user_name','by_user.profilePhotoPath as by_user_avatar',
+                'to_user.id as to_user_id','to_user.name as to_user_name','to_user.profilePhotoPath as to_user_avatar')
+            ->get();
         $friends = [];
         foreach ($friendships as $friend){
-            if($friend->by_user == $myId){
+            if($friend->by_user_id == $myId){
                 $f = [
-                    'id'=> $friend->to_user->id,
-                    'name' => $friend->to_user->name,
-                    'profilePhoto' => $friend->to_user->profilePhotoPath
+                    'id'=> $friend->to_user_id,
+                    'name' => $friend->to_user_name,
+                    'avatar' => $friend->to_user_profilePhotoPath
                 ];
                 array_push($friends,$f);
             }else{
                 $f = [
-                    'id'=> $friend->by_user->id,
-                    'name' => $friend->by_user->name,
-                    'profilePhoto' => $friend->by_user->profilePhotoPath
+                    'id'=> $friend->by_user_id,
+                    'name' => $friend->by_user_name,
+                    'avatar' => $friend->by_user_profilePhotoPath
                 ];
                 array_push($friends,$f);
             }
@@ -234,19 +241,20 @@ class FriendshipService{
         return $friends;
     }
     public function getBlockListByUserId($myId){
-        return Friendship::with('to_user')
-            ->where([
+        return Friendship::where([
                 ['by_user',$myId],
                 ['status',FriendshipStatusEnum::Blocked]
             ])
-            ->select(['to_user.id as id','to_user.name as name','to_user.profilePhotoPath as avatar'])
+            ->select(['users.id','users.name','users.profilePhotoPath as avatar'])
+            ->join('users','users.id','=','friendships.to_user')
             ->get();
     }
     public function getFriendRequests($myId){
         return Friendship::where([
             ['to_user',$myId],
             ['status',FriendshipStatusEnum::Pending]
-        ])->select(['by_user.id as id','by_user.name as name','by_user.profilePhotoPath as avatar'])
+        ])->select('users.id as id','users.name as name','users.profilePhotoPath as avatar')
+            ->join('users','users.id','=','friendships.by_user')
             ->get();
     }
 }

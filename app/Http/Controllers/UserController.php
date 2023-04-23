@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\GenericJsonException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Sanctum\Exceptions\MissingAbilityException;
 use App\Services\UserService;
 use Laravel\Socialite\Facades\Socialite;
@@ -27,6 +28,9 @@ class UserController extends Controller
         $plainTextToken = $this->userService->login($request->email,$request->password);
         return response(['token' => $plainTextToken], 200);
     }
+    public function logout(Request $request){
+        Auth::logout();
+    }
 
     public function store(Request $request) {
         $request->validate([
@@ -38,6 +42,16 @@ class UserController extends Controller
         $this->userService->register($request);
         return response(['message'=> 'registration successful'],201);
     }
+    public function updateProfilePic(Request $request){
+        $file = $request->file('profilePhoto');
+        if(!$file){
+            throw new GenericJsonException('File was not found',400);
+        }
+        return $this->userService->updateProfilePic($file,auth()->id());
+    }
+    public function updateProfile(Request $request){
+
+    }
 
     public function confirmAccount(Request $request){
         $myToken = $request->query('token');
@@ -45,7 +59,7 @@ class UserController extends Controller
     }
 
     public function me(Request $request) {
-        return auth()->id();
+        return auth()->user();
     }
 
     public function update(Request $request) {

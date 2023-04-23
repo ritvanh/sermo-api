@@ -12,9 +12,6 @@ class MessageService{
         $this->friendshipService = $service;
     }
 
-    public function findOrCreateConversation($myId,$friendId){
-
-    }
     public function sendMessage($myId,$friendId,$message){
         if(!$this->friendshipService->activeFriendshipExists($myId,$friendId)){
             throw new GenericJsonException('You cant send a message to this user',400);
@@ -31,6 +28,7 @@ class MessageService{
             'seen_on' => null
         ]);
         //broadcast here
+        return $msg;
     }
     public function deleteMessage($myId,$messageId){
         $msg = Message::where('id',$messageId)->first();

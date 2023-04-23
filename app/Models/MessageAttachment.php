@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 class MessageAttachment extends Model
 {
     use HasFactory,HasRelationships;
-
+    public $timestamps = false;
     protected $fillable = [
         'message_id',
         'file_path'

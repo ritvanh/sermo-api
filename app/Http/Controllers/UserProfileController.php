@@ -19,5 +19,9 @@ class UserProfileController extends Controller
         $result = $this->userProfileService->getProfileByUserId($loggedUserId,$userId);
         return $result;
     }
+    public function getProfileViews(Request $request){
+        $userId = auth()->id();
+        return $this->userProfileService->getProfileViewsByUserId($userId);
+    }
 
 }

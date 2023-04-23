@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\PasswordResetToken;
 use App\Mail\RegistrationGreetingMail;
 use App\Mail\PasswordReset;
+use Firebase\JWT\BeforeValidException;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -73,7 +74,7 @@ class UserService {
             'email' => $dto->email,
             'password' => Hash::make($dto->password),
             'name' => $dto->name,
-            'profilePhotoPath' => "",
+            'profilePhotoPath' => "public/Media/ProfilePictures/default.png",
             'email_verification_token' => Str::random(20),
         ]);
 
@@ -120,7 +121,6 @@ class UserService {
         if($tokenFromDb == null){
             throw new GenericJsonException("Token was not found",404);
         }
-        $creationDate;
         if($tokenFromDb->updated_at != null){
             $creationDate = $tokenFromDb->updated_at;
         }else{
@@ -174,5 +174,28 @@ class UserService {
         }
         $token = $this->loginOAuth($email);
         return $token;
+    }
+    public function updateProfilePic($newPic,$userId){
+        $user = User::where('id',$userId)->first();
+        if(!$user){
+            throw new GenericJsonException('User could not be found',404);
+        }
+        if(!$newPic){
+            throw new GenericJsonException('Picture could not be loaded correctly',400);
+        }
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+        $allowedSize = 1024*2048;
+        if ($newPic->getSize() > $allowedSize) {
+            throw new GenericJsonException('File cannot be more than 2 MB',400);
+        }
+        if(!in_array($newPic->getClientOriginalExtension(), $allowedExtensions)){
+            throw new GenericJsonException('Invalid format of file');
+        }
+        $newPath = $newPic->store('public/Media/ProfilePictures');
+        $user->profilePhotoPath = $newPath;
+        $user->save();
+        return [
+            'filePath'=>$newPath
+        ];
     }
 }
