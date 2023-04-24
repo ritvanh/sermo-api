@@ -29,5 +29,8 @@ class FriendshipController extends Controller
     public function getFriendRequests(Request $request){
         return $this->friendshipService->getFriendRequests(auth()->id());
     }
+    public function search(Request $request){
+        return $this->friendshipService->searchProfile($request->query('keyword'),auth()->id());
+    }
 
 }

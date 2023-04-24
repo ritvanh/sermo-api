@@ -38,6 +38,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/me/blocks', [App\Http\Controllers\FriendshipController::class, 'getBlockList'])->name('me.blocks');
     Route::get('/me/friendRequests', [App\Http\Controllers\FriendshipController::class, 'getFriendRequests'])->name('me.friendRequests');
     Route::post('/user/interact', [App\Http\Controllers\FriendshipController::class, 'interact'])->name('user.interact');
+    Route::get('/user/search', [App\Http\Controllers\FriendshipController::class, 'search'])->name('user.search');
     //messages
     Route::post('message',[App\Http\Controllers\MessageController::class, 'sendMessage'])->name('message.send');
     Route::delete('message/{id}',[App\Http\Controllers\MessageController::class, 'deleteMessage'])->name('message.delete');

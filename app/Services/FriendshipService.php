@@ -5,6 +5,7 @@ use App\Enums\FriendshipActionEnum;
 use App\Enums\FriendshipStatusEnum;
 use App\Exceptions\GenericJsonException;
 use App\Models\Friendship;
+use App\Models\User;
 use Carbon\Carbon;
 
 class FriendshipService{
@@ -256,5 +257,24 @@ class FriendshipService{
         ])->select('users.id as id','users.name as name','users.profilePhotoPath as avatar')
             ->join('users','users.id','=','friendships.by_user')
             ->get();
+    }
+    public  function  searchProfile($keyword,$myId){
+
+        $blockedIds = Friendship::where([
+            ['by_user',$myId],
+            ['status',FriendshipStatusEnum::Blocked]
+        ])->pluck('to_user')->toArray();
+        $blockedByIds = Friendship::where([
+            ['to_user',$myId],
+            ['status',FriendshipStatusEnum::Blocked]
+        ])->pluck('by_user')->toArray();
+        //add yourself
+        array_push($blockedIds,$myId);
+        array_merge($blockedIds, $blockedByIds);
+        return User::whereNotIn('id', $blockedIds)
+            ->orWhere('name','LIKE','%'.$keyword.'%')
+            ->orWhere('name','LIKE','%'.$keyword.'%')
+            ->select('id','name','profilePhotoPath as avatar')
+            ->paginate(10);
     }
 }
