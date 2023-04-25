@@ -3,7 +3,8 @@ namespace App\Services;
 use App\Enums\MessageStatusEnum;
 use App\Exceptions\GenericJsonException;
 use App\Models\Message;
-use Carbon\Carbon;
+use App\Models\MessageAttachment;
+use Illuminate\Support\Facades\DB;
 
 class MessageService{
     protected FriendshipService $friendshipService;
@@ -12,23 +13,41 @@ class MessageService{
         $this->friendshipService = $service;
     }
 
-    public function sendMessage($myId,$friendId,$message){
-        if(!$this->friendshipService->activeFriendshipExists($myId,$friendId)){
+    public function sendMessage($myId,$message){
+        if(!$this->friendshipService->activeFriendshipExists($myId,$message->friendId)){
             throw new GenericJsonException('You cant send a message to this user',400);
         }
         //here you save and validate attachments
+        DB::transaction(function () use ($myId,$message) {
+            $msg =  Message::create([
+                'sender_id' => $myId,
+                'receiver_id' => $message->friendId,
+                'message_content' => $message->text,
+                'reply_to_id' =>$message->replyToId,
+                'status' => MessageStatusEnum::Sent,
+                'sent_on' => now(),
+                'seen_on' => null
+            ]);
+            foreach ($message->allFiles() as $f){
+                $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif','txt'];
+                $allowedSize = 1024*2048;
+                if ($f->getSize() > $allowedSize) {
+                    throw new GenericJsonException('File cannot be more than 2 MB',400);
+                }
+                if(!in_array($f->getClientOriginalExtension(), $allowedExtensions)){
+                    throw new GenericJsonException('Invalid format of file');
+                }
+                $filePath = $f->store('public/Media/ChatFiles');
+                MessageAttachment::create([
+                    'message_id' => $msg->id,
+                    'file_path' => '/storage'.substr($filePath,6,strlen($filePath))
+                ]);
+            }
+            return $msg;
+        });
 
-        $msg =  Message::create([
-            'sender_id' => $myId,
-            'receiver_id' => $friendId,
-            'message_content' => $message->text,
-            'reply_to_id' =>$message->replyToId,
-            'status' => MessageStatusEnum::Sent,
-            'sent_on' => Carbon::now(),
-            'seen_on' => null
-        ]);
         //broadcast here
-        return $msg;
+
     }
     public function deleteMessage($myId,$messageId){
         $msg = Message::where('id',$messageId)->first();
@@ -58,12 +77,14 @@ class MessageService{
         //broadcast
     }
     public function getMessages($myId,$friendId,$page,$pageSize){
-        return Message::with()->where([
+        return Message::with('attachments')->where([
             ['sender_id',$myId],
             ['receiver_id',$friendId]
         ])->orWhere([
             ['sender_id',$myId],
             ['receiver_id',$friendId]
-        ])->paginate($pageSize,['*'],'',$page);
+        ])->select('id','status','reply_to_id','message_content','sent_on','seen_on',
+            DB::raw("(CASE WHEN sender_id = $myId THEN true ELSE false END) as isMine"))
+            ->paginate($pageSize,['*'],'',$page);
     }
 }

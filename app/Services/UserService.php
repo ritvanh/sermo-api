@@ -192,10 +192,10 @@ class UserService {
             throw new GenericJsonException('Invalid format of file');
         }
         $newPath = $newPic->store('public/Media/ProfilePictures');
-        $user->profilePhotoPath = $newPath;
+        $user->profilePhotoPath = '/storage'.substr($newPath,6,strlen($newPath));
         $user->save();
         return [
-            'filePath'=>$newPath
+            'filePath'=>'/storage'.substr($newPath,6,strlen($newPath))
         ];
     }
 }

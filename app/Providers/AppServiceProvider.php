@@ -25,7 +25,7 @@ class AppServiceProvider extends ServiceProvider
             return new UserProfileService($app->make(FriendshipService::class));
         });
         $this->app->scoped(MessageService::class, function ($app) {
-            return new MessageService();
+            return new MessageService($app->make(FriendshipService::class));
         });
     }
 

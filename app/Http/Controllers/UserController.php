@@ -62,20 +62,6 @@ class UserController extends Controller
         return auth()->user();
     }
 
-    public function update(Request $request) {
-
-        $loggedInUser = $request->user();
-        if ($loggedInUser->id == $loggedInUser->id) {
-            $loggedInUser->update();
-        } elseif ($loggedInUser->tokenCan('admin')) {
-            $loggedInUser->update();
-        } else {
-            throw new MissingAbilityException('Not Authorized');
-        }
-
-        return $loggedInUser;
-    }
-
     public function forget(Request $request){
         $this->userService->forgetPassword($request->email);
         return true;

@@ -13,8 +13,11 @@ class MessageController extends Controller
         $this->messageService = $messageService;
     }
 
-    public function sendMessage(Request $request){
-        return $this->messageService->sendMessage(auth()->id(),$request->friendId,$request->message);
+    public function sendMessage(Request $request)
+    {
+        $message = $request;
+        $msg = $this->messageService->sendMessage(auth()->id(),$message);
+        return $msg;
     }
     public function deleteMessage(Request $request){
         return $this->messageService->deleteMessage(auth()->id(),$request->query('id'));
