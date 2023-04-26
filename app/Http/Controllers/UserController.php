@@ -28,8 +28,8 @@ class UserController extends Controller
         $plainTextToken = $this->userService->login($request->email,$request->password);
         return response(['token' => $plainTextToken], 200);
     }
-    public function logout(Request $request){
-        Auth::logout();
+    public function logout(){
+        \auth()->guard('web')->logout();
     }
 
     public function store(Request $request) {

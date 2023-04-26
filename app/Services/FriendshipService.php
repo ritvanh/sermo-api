@@ -271,10 +271,11 @@ class FriendshipService{
         //add yourself
         array_push($blockedIds,$myId);
         array_merge($blockedIds, $blockedByIds);
-        return User::whereNotIn('id', $blockedIds)
+        return User::where('email','LIKE','%'.$keyword.'%')
             ->orWhere('name','LIKE','%'.$keyword.'%')
-            ->orWhere('name','LIKE','%'.$keyword.'%')
+            ->whereNotIn('id', $blockedIds)
             ->select('id','name','profilePhotoPath as avatar')
             ->paginate(10);
+
     }
 }

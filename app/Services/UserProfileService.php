@@ -22,7 +22,8 @@ class UserProfileService{
     }
     public function getProfileViewsByUserId($userId){
         return ProfileView::where('visited_id',$userId)
-            ->select(['visitor_id.id as id','visitor_id.name as name','visitor_id.profilePhotoPath as avatar','visited_at as time'])
+            ->select(['users.id','users.name','users.profilePhotoPath as avatar','visited_at'])
+            ->join('users','users.id','=','profile_views.visitor_id')
             ->get();
     }
 

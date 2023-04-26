@@ -37,7 +37,7 @@ class MessageService{
                 if(!in_array($f->getClientOriginalExtension(), $allowedExtensions)){
                     throw new GenericJsonException('Invalid format of file');
                 }
-                $filePath = $f->store('public/Media/ChatFiles');
+                $filePath = $f->store('public/Media');
                 MessageAttachment::create([
                     'message_id' => $msg->id,
                     'file_path' => '/storage'.substr($filePath,6,strlen($filePath))
@@ -77,12 +77,15 @@ class MessageService{
         //broadcast
     }
     public function getMessages($myId,$friendId,$page,$pageSize){
+        if(!$this->friendshipService->activeFriendshipExists($myId,$friendId)){
+            throw new GenericJsonException('You cant view the conversation with this user',400);
+        }
         return Message::with('attachments')->where([
             ['sender_id',$myId],
             ['receiver_id',$friendId]
         ])->orWhere([
-            ['sender_id',$myId],
-            ['receiver_id',$friendId]
+            ['sender_id',$friendId],
+            ['receiver_id',$myId]
         ])->select('id','status','reply_to_id','message_content','sent_on','seen_on',
             DB::raw("(CASE WHEN sender_id = $myId THEN true ELSE false END) as isMine"))
             ->paginate($pageSize,['*'],'',$page);

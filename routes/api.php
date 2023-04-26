@@ -41,7 +41,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/user/search', [App\Http\Controllers\FriendshipController::class, 'search'])->name('user.search');
     //messages
     Route::post('message',[App\Http\Controllers\MessageController::class, 'sendMessage'])->name('message.send');
-    Route::delete('message/{id}',[App\Http\Controllers\MessageController::class, 'deleteMessage'])->name('message.delete');
+    Route::delete('message',[App\Http\Controllers\MessageController::class, 'deleteMessage'])->name('message.delete');
     Route::get('message',[App\Http\Controllers\MessageController::class, 'getPaginatedMessages'])->name('message.getAll');
 });
 
