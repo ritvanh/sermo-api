@@ -26,7 +26,7 @@ class UserController extends Controller
     public function login(Request $request) {
 
         $plainTextToken = $this->userService->login($request->email,$request->password);
-        return response(['token' => $plainTextToken], 200);
+        return response($plainTextToken, 200);
     }
     public function logout(){
         \auth()->guard('web')->logout();
@@ -49,8 +49,11 @@ class UserController extends Controller
         }
         return $this->userService->updateProfilePic($file,auth()->id());
     }
-    public function updateProfile(Request $request){
-
+    public function updateBio(Request $request){
+        return $this->userService->updateBio($request->bio,auth()->id());
+    }
+    public function updateName(Request $request){
+        return $this->userService->updateName($request->name,auth()->id());
     }
 
     public function confirmAccount(Request $request){
@@ -89,7 +92,7 @@ class UserController extends Controller
         $payload = $client->verifyIdToken($token);
         if ($payload) {
             $token = $this->userService->loginUsingGooleUser($payload);
-            return response(['token' => $token], 200);
+            return response($token, 200);
         } else {
             throw new GenericJsonException("Invalid token",401);
         }

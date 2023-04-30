@@ -35,7 +35,11 @@ class UserService {
 
         $roles = $user->roles->pluck('name')->toArray();
 
-        return $user->createToken('token',$roles)->plainTextToken;
+        $token = $user->createToken('token',$roles)->plainTextToken;
+        return [
+            'user' => $user,
+            'token' => $token
+        ];
     }
 
     public function  loginOAuth($email){
@@ -43,7 +47,11 @@ class UserService {
         $user->tokens()->delete();
         $roles = $user->roles->pluck('name')->toArray();
 
-        return $user->createToken('token',$roles)->plainTextToken;
+        $token = $user->createToken('token',$roles)->plainTextToken;
+        return [
+            'user' => $user,
+            'token' => $token
+        ];
     }
 
     public function getAll(){
@@ -197,5 +205,29 @@ class UserService {
         return [
             'filePath'=>'/storage'.substr($newPath,6,strlen($newPath))
         ];
+    }
+    public function updateBio($newBio,$userId){
+        $user = User::where('id',$userId)->first();
+        if(!$user){
+            throw new GenericJsonException('User could not be found',404);
+        }
+        if(!$newBio){
+            throw new GenericJsonException('Incorrect inpuy',400);
+        }
+        $user->bio = $newBio;
+        $user->save();
+        return true;
+    }
+    public function updateName($newName,$userId){
+        $user = User::where('id',$userId)->first();
+        if(!$user){
+            throw new GenericJsonException('User could not be found',404);
+        }
+        if(!$newName){
+            throw new GenericJsonException('Incorrect inpuy',400);
+        }
+        $user->name = $newName;
+        $user->save();
+        return true;
     }
 }

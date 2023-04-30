@@ -30,6 +30,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/me',[App\Http\Controllers\UserController::class, 'me'])->name('me');
     Route::post('/logout',[App\Http\Controllers\UserController::class, 'logout'])->name('me.logout');
     Route::post('/me/profilePic',[App\Http\Controllers\UserController::class, 'updateProfilePic'])->name('me.updateProfilePic');
+    Route::post('/me/bio',[App\Http\Controllers\UserController::class, 'updateBio'])->name('me.updateBio');
+    Route::post('/me/name',[App\Http\Controllers\UserController::class, 'updateName'])->name('me.updateName');
     //profiles
     Route::get('/user', [App\Http\Controllers\UserProfileController::class, 'getProfile'])->name('user.profile');
     Route::get('/me/profileViews', [App\Http\Controllers\UserProfileController::class, 'getProfileViews'])->name('me.profileViews');
@@ -43,6 +45,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('message',[App\Http\Controllers\MessageController::class, 'sendMessage'])->name('message.send');
     Route::delete('message',[App\Http\Controllers\MessageController::class, 'deleteMessage'])->name('message.delete');
     Route::get('message',[App\Http\Controllers\MessageController::class, 'getPaginatedMessages'])->name('message.getAll');
+    Route::get('conversations',[App\Http\Controllers\MessageController::class, 'getConversations'])->name('conversations.getAll');
 });
 
 

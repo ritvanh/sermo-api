@@ -25,4 +25,7 @@ class MessageController extends Controller
     public function getPaginatedMessages(Request $request){
         return $this->messageService->getMessages(auth()->id(),$request->query('friendId'),$request->query('page'),$request->query('pageSize'));
     }
+    public function getConversations(Request $request){
+        return $this->messageService->getConversations(auth()->id());
+    }
 }

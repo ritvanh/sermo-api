@@ -5,7 +5,6 @@ use App\Enums\FriendshipStatusEnum;
 use App\Exceptions\GenericJsonException;
 use App\Models\ProfileView;
 use App\Models\User;
-use Carbon\Carbon;
 
 class UserProfileService{
     protected FriendshipService $friendshipService;
@@ -54,6 +53,7 @@ class UserProfileService{
           'name' => $user->name,
             'id' => $user->id,
             'avatar' => $user->profilePhotoPath,
+            'bio' => $user->bio,
             'relation' => $relationship
         ];
     }

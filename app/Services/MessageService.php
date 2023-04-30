@@ -3,6 +3,7 @@ namespace App\Services;
 use App\Enums\MessageStatusEnum;
 use App\Exceptions\GenericJsonException;
 use App\Models\Message;
+use App\Models\User;
 use App\Models\MessageAttachment;
 use Illuminate\Support\Facades\DB;
 
