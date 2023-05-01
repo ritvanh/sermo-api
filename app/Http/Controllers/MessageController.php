@@ -28,4 +28,8 @@ class MessageController extends Controller
     public function getConversations(Request $request){
         return $this->messageService->getConversations(auth()->id());
     }
+    public function getAttachment(Request $request){
+        $id = $request->query('id');
+        return $this->messageService->getAttachment($id,auth()->id());
+    }
 }

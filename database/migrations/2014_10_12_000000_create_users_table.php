@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('bio')->nullable();
             $table->rememberToken();
             $table->timestamps();
-            $table->string('profilePhotoPath');
+            $table->longText('profilePhotoPath');
             $table->string('email_verification_token');
         });
     }

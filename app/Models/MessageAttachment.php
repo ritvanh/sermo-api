@@ -12,7 +12,9 @@ class MessageAttachment extends Model
     public $timestamps = false;
     protected $fillable = [
         'message_id',
-        'file_path'
+        'filename',
+        'mime_type',
+        'file_data'
     ];
 
     public function message(){

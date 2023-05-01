@@ -19,6 +19,7 @@ use Carbon\Carbon;
 use Spatie\Ignition\Tests\TestClasses\Models\Car;
 
 class UserService {
+    static $defaultAvatar = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIUAAACFCAMAAABCBMsOAAAAMFBMVEXFxcX////CwsL7+/vS0tLw8PD09PTIyMjMzMzY2Njr6+v39/fj4+Pd3d2/v7/m5uYhGKWhAAAC9klEQVR4nO2aW3qEIAyFFVG84v53W6i12lHHJJw4feBfwflyD6EoMplMJpPJZDKZTIaL+eGDElxrp7nv+3myrSs+oMT4dqqrckc92odNYoppKI9UY/ucRYybzzQsFrEPyTBTdaUhMrsHdBh7aYeVzqurGO80BHplDYYiIkSHU1XRkESEbGkVg4MqIsrQ0mB6soiybJScQoyJlVrFJ6ZjiQiFQ0NG+7ZWnWEVVMxcEeUADw1j2SLKcoT7hJ6kG+h0ZYfmAjhAvcQUAawKJxNRTkgZzIK1UQNFyGIzAo3PVigiTDw4lwgzJNIDVXCa6V8anAppngYqXBU3chXAlsZvpxsdTIWkk/2qgAVGVvHfVCRFJ65g3K6m1+AyNaVq4drZ/6jgZpKrAL4iyJMEOYY7cXhCp3D+SrQA3ZlFO1EEuxd5Yd3CrkXCLKnB72yyIo4bLhZExlB46xNUcfzblmAbwD8cCLZEYAvZU7NEKL01mpZVx4HjzYsMRrpqiYiFnCxDT0S0Bi1fK00RAUeRUakfjPx9wvb6V5oQHO8zdkA3j3MV/m3hGJzXv5uZorsrXnWnfM68uKMe7DEp6gh2oDbWRs0e3nKae2M1MsU47oLW48+7zFb2zYA+JHrZQjIjvWIcb7TYqHFeofawMxqUV1hjxQHQlVm8Ha4gGixjsrmyBkBGkjt+ZKTOwWkxsclIswZptLon7RnDSOvEKymnf/HR7oh8W0zO0T3iRIFE5oo0URLeWs+Q3fESnlrPkd2Zkf6IVBIRuPxYGfki5Ofka/gBiqpXe9i3f2Sp2GCebBLuMu9g3il0TME0BrhgbbBKl0aCLDDSBNhLX+H01oTL5Q0DXYT868k95JcetdiMkOPTofvYHurnlIS/QBSIT6GqDqG7RNMh5DFDr2QtkAoXfNJ7hTb56YYF9aan09Q3GooI7bCgBYbWaLFBGDLUg5MUnl47OEn3k5Sfg0Qoh9YHVNyLUG2oC4S2qp+olFTVT1RKquoOFwuHqe8Loi4lQmPzD5MAAAAASUVORK5CYII=';
     public function getUser($id) {
         // code to get user by id
     }
@@ -82,7 +83,7 @@ class UserService {
             'email' => $dto->email,
             'password' => Hash::make($dto->password),
             'name' => $dto->name,
-            'profilePhotoPath' => "public/Media/ProfilePictures/default.png",
+            'profilePhotoPath' => self::$defaultAvatar,
             'email_verification_token' => Str::random(20),
         ]);
 
@@ -192,18 +193,18 @@ class UserService {
             throw new GenericJsonException('Picture could not be loaded correctly',400);
         }
         $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
-        $allowedSize = 1024*2048;
+        $allowedSize = 1024*1024;
         if ($newPic->getSize() > $allowedSize) {
-            throw new GenericJsonException('File cannot be more than 2 MB',400);
+            throw new GenericJsonException('File cannot be more than 1 MB',400);
         }
         if(!in_array($newPic->getClientOriginalExtension(), $allowedExtensions)){
             throw new GenericJsonException('Invalid format of file');
         }
-        $newPath = $newPic->store('public/Media/ProfilePictures');
-        $user->profilePhotoPath = '/storage'.substr($newPath,6,strlen($newPath));
+
+        $user->profilePhotoPath = base64_encode(file_get_contents($newPic->path()));
         $user->save();
         return [
-            'filePath'=>'/storage'.substr($newPath,6,strlen($newPath))
+            'avatar'=>$user->profilePhotoPath
         ];
     }
     public function updateBio($newBio,$userId){

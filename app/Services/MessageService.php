@@ -34,19 +34,20 @@ class MessageService{
                 'sent_on' => now(),
                 'seen_on' => null
             ]);
-            foreach ($message->allFiles() as $f){
+            foreach ($message->allFiles() as $file){
                 $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif','txt'];
                 $allowedSize = 1024*2048;
-                if ($f->getSize() > $allowedSize) {
+                if ($file->getSize() > $allowedSize) {
                     throw new GenericJsonException('File cannot be more than 2 MB',400);
                 }
-                if(!in_array($f->getClientOriginalExtension(), $allowedExtensions)){
+                if(!in_array($file->getClientOriginalExtension(), $allowedExtensions)){
                     throw new GenericJsonException('Invalid format of file');
                 }
-                $filePath = $f->store('public/Media');
                 MessageAttachment::create([
                     'message_id' => $msg->id,
-                    'file_path' => '/storage'.substr($filePath,6,strlen($filePath))
+                    'filename'=>$file->getClientOriginalName(),
+                    'mime_type' => $file->getClientMimeType(),
+                    'file_data' => base64_encode(file_get_contents($file->path()))
                 ]);
             }
             return $msg;
@@ -115,5 +116,14 @@ class MessageService{
             }
         }
         return $activeConvos;
+    }
+    public function getAttachment($attachmentId,$myId){
+
+        $attachment =  MessageAttachment::with('message')->where('id',$attachmentId)->first();
+        $correspondingMsg = Message::where('id',$attachment->message_id)->first();
+        if($correspondingMsg->sender_id != $myId && $correspondingMsg->receiver_id != $myId){
+            throw new GenericJsonException('this attachment doesnt belong to you',403);
+        }
+        return $attachment;
     }
 }
