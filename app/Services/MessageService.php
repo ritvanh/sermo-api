@@ -1,7 +1,9 @@
 <?php
 namespace App\Services;
+use App\Enums\FriendshipStatusEnum;
 use App\Enums\MessageStatusEnum;
 use App\Exceptions\GenericJsonException;
+use App\Models\Friendship;
 use App\Models\Message;
 use App\Models\User;
 use App\Models\MessageAttachment;
@@ -17,6 +19,9 @@ class MessageService{
     public function sendMessage($myId,$message){
         if(!$this->friendshipService->activeFriendshipExists($myId,$message->friendId)){
             throw new GenericJsonException('You cant send a message to this user',400);
+        }
+        if(!$message->text && !$message->allFiles()){
+            throw new GenericJsonException("invalid message", 400);
         }
         //here you save and validate attachments
         DB::transaction(function () use ($myId,$message) {
@@ -90,5 +95,25 @@ class MessageService{
         ])->select('id','status','reply_to_id','message_content','sent_on','seen_on',
             DB::raw("(CASE WHEN sender_id = $myId THEN true ELSE false END) as isMine"))
             ->paginate($pageSize,['*'],'',$page);
+    }
+
+    public function  getConversations($myId){
+        $friends = $this->friendshipService->getFriendsByUserId($myId);
+        $activeConvos = [];
+        foreach ($friends as $friend){
+            if(Message::where([
+                ['sender_id',$myId],
+                ['receiver_id',$friend['id']]
+            ])->orWhere([
+                ['sender_id',$friend['id']],
+                ['receiver_id',$myId]
+            ])->exists()){
+                $user = User::where('id',$friend['id'])
+                    ->select('id','name','profilePhotoPath as avatar','bio')
+                    ->first();
+                array_push($activeConvos,$user);
+            }
+        }
+        return $activeConvos;
     }
 }
