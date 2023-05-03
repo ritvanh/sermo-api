@@ -1,6 +1,8 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Events\SendMessage;
+use App\Exceptions\GenericJsonException;
 use App\Services\MessageService;
 use Illuminate\Http\Request;
 
@@ -21,6 +23,13 @@ class MessageController extends Controller
     }
     public function deleteMessage(Request $request){
         return $this->messageService->deleteMessage(auth()->id(),$request->query('id'));
+    }
+    public function markMessagesAsSeen(Request $request){
+        $friendId = $request->query('friendId');
+        if(!$friendId){
+            throw new GenericJsonException('Invalid conversation',400);
+        }
+        return $this->messageService->markMessagesAsSeen(auth()->id(),$friendId);
     }
     public function getPaginatedMessages(Request $request){
         return $this->messageService->getMessages(auth()->id(),$request->query('friendId'),$request->query('page'),$request->query('pageSize'));

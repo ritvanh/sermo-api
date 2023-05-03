@@ -3,6 +3,7 @@ namespace App\Services;
 
 use App\Enums\FriendshipActionEnum;
 use App\Enums\FriendshipStatusEnum;
+use App\Events\SendFriendRequest;
 use App\Exceptions\GenericJsonException;
 use App\Models\Friendship;
 use App\Models\User;
@@ -60,6 +61,11 @@ class FriendshipService{
             'status' => FriendshipStatusEnum::Pending,
             'created_on' => Carbon::now()
         ]);
+        $dto = [
+            'senderId' => $myId,
+            'receiverId' => $friendId
+        ];
+        event(new SendFriendRequest($dto));
         return true;
     }
     public function  cancelFriendRequest($myId, $friendId){

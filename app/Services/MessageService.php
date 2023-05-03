@@ -1,9 +1,10 @@
 <?php
 namespace App\Services;
-use App\Enums\FriendshipStatusEnum;
 use App\Enums\MessageStatusEnum;
+use App\Events\DeleteMessage;
+use App\Events\MarkMessagesAsSeen;
+use App\Events\SendMessage;
 use App\Exceptions\GenericJsonException;
-use App\Models\Friendship;
 use App\Models\Message;
 use App\Models\User;
 use App\Models\MessageAttachment;
@@ -24,7 +25,9 @@ class MessageService{
             throw new GenericJsonException("invalid message", 400);
         }
         //here you save and validate attachments
-        DB::transaction(function () use ($myId,$message) {
+        $msg = null;
+        $attachmentIds = [];
+        DB::transaction(function () use ($myId,$message,&$msg,&$attachmentIds) {
             $msg =  Message::create([
                 'sender_id' => $myId,
                 'receiver_id' => $message->friendId,
@@ -40,21 +43,29 @@ class MessageService{
                 if ($file->getSize() > $allowedSize) {
                     throw new GenericJsonException('File cannot be more than 2 MB',400);
                 }
-                if(!in_array($file->getClientOriginalExtension(), $allowedExtensions)){
-                    throw new GenericJsonException('Invalid format of file');
-                }
-                MessageAttachment::create([
+//                if(!in_array($file->getClientOriginalExtension(), $allowedExtensions)){
+//                    throw new GenericJsonException('Invalid format of file');
+//                }
+                $att = MessageAttachment::create([
                     'message_id' => $msg->id,
                     'filename'=>$file->getClientOriginalName(),
                     'mime_type' => $file->getClientMimeType(),
                     'file_data' => base64_encode(file_get_contents($file->path()))
                 ]);
+                array_push($attachmentIds,$att->id);
             }
-            return $msg;
         });
-
-        //broadcast here
-
+        $response = [
+            'id' => $msg->id,
+            'sender_id' => $msg->sender_id,
+            'receiver_id' => $msg->receiver_id,
+            'message_content' => $msg->message_content,
+            'sent_on' => $msg->sent_on,
+            'reply_to_id' => $msg->reply_to_id,
+            'attachments' => $attachmentIds
+        ];
+        event(new SendMessage($response));
+        return $response;
     }
     public function deleteMessage($myId,$messageId){
         $msg = Message::where('id',$messageId)->first();
@@ -64,24 +75,31 @@ class MessageService{
         if($msg->sender_id != $myId){
             throw new GenericJsonException('You cant delete a message you didnt send',400);
         }
+        $deleteMsgDto = [
+            'messageId' => $msg->id,
+            'friendId' => $msg->sender_id,
+            'receiverId' => $msg->receiver_id
+        ];
         $msg->delete();
-        //broadcast here
+        event(new DeleteMessage($deleteMsgDto));
     }
 
-    public function markMessageAsSeen($myId, $messageId){
-        $msg = Message::where('id',$messageId)->first();
-        if(!$msg){
-            throw new GenericJsonException('Couldnt find message',404);
+    public function markMessagesAsSeen($myId, $friendId){
+        if(!$this->friendshipService->activeFriendshipExists($myId,$friendId)){
+            throw new GenericJsonException('You cant interact with this user',400);
         }
-        if($msg->receiver_id != $myId){
-            throw new GenericJsonException('You cant change the status of a message you send',400);
-        }
-        if($msg->status != MessageStatusEnum::Sent){
-            throw new GenericJsonException("You cant mark a message as read at this moment",400);
-        }
-        $msg->status = MessageStatusEnum::Seen;
-        $msg->save();
-        //broadcast
+        Message::where([
+            ['sender_id',$friendId],
+            ['receiver_id',$myId],
+            ['status',MessageStatusEnum::Sent]
+        ])->update(['status' => MessageStatusEnum::Seen]);
+        //broadcast to friendId, update sent messages to seen
+        $eventDto = [
+            'friendId' => $myId,
+            'receiverId' => $friendId
+        ];
+        event(new MarkMessagesAsSeen($eventDto));
+        return true;
     }
     public function getMessages($myId,$friendId,$page,$pageSize){
         if(!$this->friendshipService->activeFriendshipExists($myId,$friendId)){
