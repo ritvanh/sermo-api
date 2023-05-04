@@ -130,7 +130,27 @@ class MessageService{
                 $user = User::where('id',$friend['id'])
                     ->select('id','name','profilePhotoPath as avatar','bio')
                     ->first();
-                array_push($activeConvos,$user);
+                $lastMessage = Message::with('attachments')->where([
+                    ['sender_id',$myId],
+                    ['receiver_id',$friend['id']]
+                ])->orWhere([
+                    ['sender_id',$friend['id']],
+                    ['receiver_id',$myId]
+                ])->select('id','status','message_content','sent_on',
+                    DB::raw("(CASE WHEN sender_id = $myId THEN true ELSE false END) as is_mine"))
+                    ->orderBy('sent_on', 'desc')
+                    ->first();
+                $obj = [
+                    'friend' => $user,
+                    'lastMessage' => [
+                        'id' => $lastMessage['id'],
+                        'status' => $lastMessage['status'],
+                        'message_content' => count($lastMessage['attachments'])>0 ? 'attachments' : $lastMessage['message_content'],
+                        'sent_on' => $lastMessage['sent_on'],
+                        'is_mine' => $lastMessage['is_mine']
+                    ]
+                ];
+                array_push($activeConvos,$obj);
             }
         }
         return $activeConvos;
