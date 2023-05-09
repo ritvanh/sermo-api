@@ -140,6 +140,11 @@ class MessageService{
                     DB::raw("(CASE WHEN sender_id = $myId THEN true ELSE false END) as is_mine"))
                     ->orderBy('sent_on', 'desc')
                     ->first();
+                $unseenCount = Message::where([
+                    ['sender_id',$friend['id']],
+                    ['receiver_id',$myId],
+                    ['status',MessageStatusEnum::Sent]
+                ])->count();
                 $obj = [
                     'friend' => $user,
                     'lastMessage' => [
@@ -148,7 +153,8 @@ class MessageService{
                         'message_content' => count($lastMessage['attachments'])>0 ? 'attachments' : $lastMessage['message_content'],
                         'sent_on' => $lastMessage['sent_on'],
                         'is_mine' => $lastMessage['is_mine']
-                    ]
+                    ],
+                    'unseenCount' => $unseenCount
                 ];
                 array_push($activeConvos,$obj);
             }
