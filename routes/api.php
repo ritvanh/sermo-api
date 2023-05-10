@@ -43,8 +43,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/user/search', [App\Http\Controllers\FriendshipController::class, 'search'])->name('user.search');
     //messages
     Route::post('message',[App\Http\Controllers\MessageController::class, 'sendMessage'])->name('message.send');
+    Route::get('message/seen',[App\Http\Controllers\MessageController::class, 'markMessagesAsSeen'])->name('message.markAsSeen');
     Route::delete('message',[App\Http\Controllers\MessageController::class, 'deleteMessage'])->name('message.delete');
     Route::get('message',[App\Http\Controllers\MessageController::class, 'getPaginatedMessages'])->name('message.getAll');
+    Route::get('message/attachment',[App\Http\Controllers\MessageController::class, 'getAttachment'])->name('message.getAttachment');
     Route::get('conversations',[App\Http\Controllers\MessageController::class, 'getConversations'])->name('conversations.getAll');
 });
 
