@@ -30,15 +30,22 @@ class UserProfileService{
         $friendship = $this->friendshipService->getFriendship($myId,$userId);
         if(!$friendship){
             $relationship = FriendshipStatusEnum::None;
+            $isCreatedByMe = false;
         }else {
             switch ($friendship->status) {
                 case(FriendshipStatusEnum::Blocked):
-                    throw new GenericJsonException('User could not be found', 404);
+                    if($friendship->by_user != $myId) {
+                        throw new GenericJsonException('User could not be found', 404);
+                    }
+                    $relationship = FriendshipStatusEnum::Blocked;
+                    $isCreatedByMe = true;
                 case(FriendshipStatusEnum::Active):
                     $relationship = FriendshipStatusEnum::Active;
+                    $isCreatedByMe = $friendship->by_user == $myId;
                     break;
                 case(FriendshipStatusEnum::Pending):
                     $relationship = FriendshipStatusEnum::Pending;
+                    $isCreatedByMe = $friendship->by_user == $myId;
                     break;
                 default:
                     throw new GenericJsonException('Could not define relationship', 500);
@@ -54,7 +61,8 @@ class UserProfileService{
             'id' => $user->id,
             'avatar' => $user->profilePhotoPath,
             'bio' => $user->bio,
-            'relation' => $relationship
+            'relation' => $relationship,
+            'isRelationCreatedByMe' => $isCreatedByMe
         ];
     }
 

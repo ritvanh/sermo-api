@@ -266,20 +266,15 @@ class FriendshipService{
     }
     public  function  searchProfile($keyword,$myId){
 
-        $blockedIds = Friendship::where([
-            ['by_user',$myId],
-            ['status',FriendshipStatusEnum::Blocked]
-        ])->pluck('to_user')->toArray();
         $blockedByIds = Friendship::where([
             ['to_user',$myId],
             ['status',FriendshipStatusEnum::Blocked]
         ])->pluck('by_user')->toArray();
         //add yourself
-        array_push($blockedIds,$myId);
-        array_merge($blockedIds, $blockedByIds);
+        array_push($blockedByIds,$myId);
         return User::where('email','LIKE','%'.$keyword.'%')
             ->orWhere('name','LIKE','%'.$keyword.'%')
-            ->whereNotIn('id', $blockedIds)
+            ->whereNotIn('id', $blockedByIds)
             ->select('id','name','profilePhotoPath as avatar')
             ->paginate(10);
 
