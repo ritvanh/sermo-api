@@ -111,7 +111,8 @@ class MessageService{
         ])->orWhere([
             ['sender_id',$friendId],
             ['receiver_id',$myId]
-        ])->select('id','status','reply_to_id','message_content','sent_on','seen_on',
+        ])->orderBy('sent_on', 'DESC')
+            ->select('id','status','reply_to_id','message_content','sent_on','seen_on',
             DB::raw("(CASE WHEN sender_id = $myId THEN true ELSE false END) as isMine"))
             ->paginate($pageSize,['*'],'',$page);
     }

@@ -39,6 +39,7 @@ class UserProfileService{
                     }
                     $relationship = FriendshipStatusEnum::Blocked;
                     $isCreatedByMe = true;
+                    break;
                 case(FriendshipStatusEnum::Active):
                     $relationship = FriendshipStatusEnum::Active;
                     $isCreatedByMe = $friendship->by_user == $myId;
