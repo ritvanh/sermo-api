@@ -37,23 +37,6 @@ class MessageService{
                 'sent_on' => now(),
                 'seen_on' => null
             ]);
-            foreach ($message->allFiles() as $file){
-                $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif','txt'];
-                $allowedSize = 1024*2048;
-                if ($file->getSize() > $allowedSize) {
-                    throw new GenericJsonException('File cannot be more than 2 MB',400);
-                }
-//                if(!in_array($file->getClientOriginalExtension(), $allowedExtensions)){
-//                    throw new GenericJsonException('Invalid format of file');
-//                }
-                $att = MessageAttachment::create([
-                    'message_id' => $msg->id,
-                    'filename'=>$file->getClientOriginalName(),
-                    'mime_type' => $file->getClientMimeType(),
-                    'file_data' => base64_encode(file_get_contents($file->path()))
-                ]);
-                array_push($attachmentIds,$att->id);
-            }
         });
         $response = [
             'id' => $msg->id,
@@ -105,7 +88,7 @@ class MessageService{
         if(!$this->friendshipService->activeFriendshipExists($myId,$friendId)){
             throw new GenericJsonException('You cant view the conversation with this user',400);
         }
-        return Message::with('attachments')->where([
+        return Message::where([
             ['sender_id',$myId],
             ['receiver_id',$friendId]
         ])->orWhere([
@@ -121,25 +104,17 @@ class MessageService{
         $friends = $this->friendshipService->getFriendsByUserId($myId);
         $activeConvos = [];
         foreach ($friends as $friend){
-            if(Message::where([
-                ['sender_id',$myId],
-                ['receiver_id',$friend['id']]
-            ])->orWhere([
-                ['sender_id',$friend['id']],
-                ['receiver_id',$myId]
-            ])->exists()){
                 $user = User::where('id',$friend['id'])
                     ->select('id','name','profilePhotoPath as avatar','bio')
                     ->first();
-                $lastMessage = Message::with('attachments')->where([
+                $lastMessage = Message::where([
                     ['sender_id',$myId],
                     ['receiver_id',$friend['id']]
                 ])->orWhere([
                     ['sender_id',$friend['id']],
                     ['receiver_id',$myId]
-                ])->select('id','status','message_content','sent_on',
+                ])->orderBy('sent_on', 'desc')->select('id','status','message_content','sent_on',
                     DB::raw("(CASE WHEN sender_id = $myId THEN true ELSE false END) as is_mine"))
-                    ->orderBy('sent_on', 'desc')
                     ->first();
                 $unseenCount = Message::where([
                     ['sender_id',$friend['id']],
@@ -148,17 +123,16 @@ class MessageService{
                 ])->count();
                 $obj = [
                     'friend' => $user,
-                    'lastMessage' => [
+                    'lastMessage' => $lastMessage != null ? [
                         'id' => $lastMessage['id'],
                         'status' => $lastMessage['status'],
-                        'message_content' => count($lastMessage['attachments'])>0 ? 'attachments' : $lastMessage['message_content'],
+                        'message_content' => $lastMessage['message_content'],
                         'sent_on' => $lastMessage['sent_on'],
                         'is_mine' => $lastMessage['is_mine']
-                    ],
+                    ] : null,
                     'unseenCount' => $unseenCount
                 ];
                 array_push($activeConvos,$obj);
-            }
         }
         return $activeConvos;
     }
